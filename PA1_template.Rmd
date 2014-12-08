@@ -11,12 +11,26 @@ output:
 ```{r}
 unzip( "activity.zip" )
 data <- read.csv( "activity.csv", header=TRUE )
-summary( data )
 ```
 
 ## What is mean total number of steps taken per day?
+```{r}
+# Make a histogram of the total number of steps taken each day
+## sum the number of steps per day
+data_na_omit = na.omit( data )
+total_steps_by_day <- aggregate( steps ~ date, data_na_omit, sum )
+## plot a histogram of the number of steps
+library("ggplot2")
+g <- ggplot( total_steps_by_day, aes( x=steps ) )
+g <- g + geom_histogram( bin=2500 )
+g <- g + labs( title="Total Number of Steps per Day", y="Frequency", 
+               x="Total Steps in a Day" )
+print( g )
 
-
+# Calculate and report the mean and median total number of steps taken per day
+print( meanSteps <- mean( total_steps_by_day$steps ))
+print( medianSteps <- median( total_steps_by_day$steps ))
+```
 
 ## What is the average daily activity pattern?
 
