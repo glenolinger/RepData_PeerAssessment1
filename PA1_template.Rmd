@@ -17,23 +17,44 @@ data <- read.csv( "activity.csv", header=TRUE )
 ```{r}
 # Make a histogram of the total number of steps taken each day
 ## sum the number of steps per day
-data_na_omit = na.omit( data )
-total_steps_by_day <- aggregate( steps ~ date, data_na_omit, sum )
+total_steps_by_day <- as.data.frame( tapply( data$steps, data$date, sum, na.rm=T ))
+colnames( total_steps_by_day ) <- "steps"
+
+# Calculate the mean and median total number of steps taken per day
+meanSteps <- mean( total_steps_by_day$steps )
+medianSteps <- median( total_steps_by_day$steps )
+
 ## plot a histogram of the number of steps
 library("ggplot2")
-g <- ggplot( total_steps_by_day, aes( x=steps ) )
+g <- ggplot( total_steps_by_day, aes( x=steps ))
 g <- g + geom_histogram( bin=2500 )
 g <- g + labs( title="Total Number of Steps per Day", y="Frequency", 
                x="Total Steps in a Day" )
+g <- g + geom_vline( xintercept = meanSteps, color="blue", labels="Mean", show_guide=TRUE )
+#g <- g + geom_vline( xintercept = medianSteps, color="green", labels="Median", show_guide=TRUE )
 print( g )
 
-# Calculate and report the mean and median total number of steps taken per day
-print( meanSteps <- mean( total_steps_by_day$steps ))
-print( medianSteps <- median( total_steps_by_day$steps ))
+# Report the mean and median total number of steps taken per day
+sprintf( "The mean number of steps %.02f.", meanSteps )
+sprintf( "The median number of step %d.", medianSteps )
 ```
 
 ## What is the average daily activity pattern?
+```{r}
+avg_steps <- tapply( data$steps, data$interval, mean, na.rm=TRUE )
+hour <- as.numeric( names(avg_steps) )/100
 
+dataFrame <- data.frame( hour, avg_steps )
+g <- ggplot( dataFrame, aes( x=hour, y=avg_steps ))
+g <- g + geom_line()
+g <- g + labs( title="Average Number of Steps During the Day", y="Average Number of Steps", x="hour" )
+print( g )
+
+max_num_steps <- which( avg_steps==max(avg_steps) )
+max_num_steps_int <- data$interval[ max_num_steps ]
+sprintf("Max number of steps interval of the day: %02d:%02d", floor( max_num_steps_int/100 ), max_num_steps_int %% 100)
+
+```
 
 
 ## Imputing missing values
