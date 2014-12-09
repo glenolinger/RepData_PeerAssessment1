@@ -17,7 +17,7 @@ data <- read.csv( "activity.csv", header=TRUE )
 ```{r}
 # Make a histogram of the total number of steps taken each day
 ## sum the number of steps per day
-total_steps_by_day <- as.data.frame( tapply( data$steps, data$date, sum, na.rm=T ))
+total_steps_by_day <- as.data.frame( tapply( data$steps, data$date, sum, na.rm=TRUE ))
 colnames( total_steps_by_day ) <- "steps"
 
 # Calculate the mean and median total number of steps taken per day
@@ -30,8 +30,9 @@ g <- ggplot( total_steps_by_day, aes( x=steps ))
 g <- g + geom_histogram( bin=2500 )
 g <- g + labs( title="Total Number of Steps per Day", y="Frequency", 
                x="Total Steps in a Day" )
-g <- g + geom_vline( xintercept = meanSteps, color="blue", labels="Mean", show_guide=TRUE )
-#g <- g + geom_vline( xintercept = medianSteps, color="green", labels="Median", show_guide=TRUE )
+vLines <- data.frame( stat_type=c("Mean", "Median"), vals=c( meanSteps, medianSteps ))
+g <- g + geom_vline( data = vLines, aes( xintercept=vals, colour = stat_type ), 
+                     show_guide = TRUE )
 print( g )
 
 # Report the mean and median total number of steps taken per day
