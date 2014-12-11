@@ -6,27 +6,32 @@ output:
   pdf_document: default
 ---
 
-
 ## Loading and preprocessing the data
+#### Show any code that is needed to:
+##### 1. Load the data (i.e. read.csv())
+##### 2. Process/transform the data (if necessary) into a format suitable for your analysis
 ```{r}
+# unzip the data file and load it into a data frame
 unzip( "activity.zip" )
 data <- read.csv( "activity.csv", header=TRUE )
 ```
 
 ## What is mean total number of steps taken per day?
+#### For this part of the assignment, you can ignore the missing values in the dataset.
+##### 1. Make a histogram of the total number of steps taken each day
+##### 2. Calculate and report the mean and median total number of steps taken per day
 ```{r}
-# Make a histogram of the total number of steps taken each day
-## sum the number of steps per day
-total_steps_by_day <- as.data.frame( tapply( data$steps, data$date, sum, na.rm=TRUE ))
-colnames( total_steps_by_day ) <- "steps"
+# sum the number of steps per day
+totalStepsByDay <- as.data.frame( tapply( data$steps, data$date, sum, na.rm=TRUE ))
+colnames( totalStepsByDay ) <- "steps"
 
-# Calculate the mean and median total number of steps taken per day
-meanSteps <- mean( total_steps_by_day$steps )
-medianSteps <- median( total_steps_by_day$steps )
+# calculate the mean and median total number of steps taken per day
+meanSteps <- mean( totalStepsByDay$steps )
+medianSteps <- median( totalStepsByDay$steps )
 
 ## plot a histogram of the number of steps
 library("ggplot2")
-g <- ggplot( total_steps_by_day, aes( x=steps ))
+g <- ggplot( totalStepsByDay, aes( x=steps ))
 g <- g + geom_histogram( bin=2500 )
 g <- g + labs( title="Total Number of Steps per Day", y="Frequency", 
                x="Total Steps in a Day" )
@@ -34,32 +39,91 @@ vLines <- data.frame( stat_type=c("Mean", "Median"), vals=c( meanSteps, medianSt
 g <- g + geom_vline( data = vLines, aes( xintercept=vals, colour = stat_type ), 
                      show_guide = TRUE )
 print( g )
+```
 
+```{r, echo=FALSE}
 # Report the mean and median total number of steps taken per day
-sprintf( "The mean number of steps %.02f.", meanSteps )
-sprintf( "The median number of step %d.", medianSteps )
+sprintf( "The mean number of steps: %.02f.", meanSteps )
+sprintf( "The median number of steps: %d.", medianSteps )
 ```
 
 ## What is the average daily activity pattern?
+##### 1. Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis).
+##### 2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 ```{r}
-avg_steps <- tapply( data$steps, data$interval, mean, na.rm=TRUE )
-hour <- as.numeric( names(avg_steps) )/100
+## Calculate the average steps per interval.
+meanStepsPerInt <- tapply( data$steps, data$interval, mean, na.rm=TRUE )
+interval <- as.numeric( names( meanStepsPerInt ) )
 
-dataFrame <- data.frame( hour, avg_steps )
-g <- ggplot( dataFrame, aes( x=hour, y=avg_steps ))
+meanStepsPerIntDf <- data.frame( interval, meanStepsPerInt )
+g <- ggplot( meanStepsPerIntDf, aes( x=interval, y=meanStepsPerInt ))
 g <- g + geom_line()
 g <- g + labs( title="Average Number of Steps During the Day", y="Average Number of Steps", x="hour" )
 print( g )
 
-max_num_steps <- which( avg_steps==max(avg_steps) )
-max_num_steps_int <- data$interval[ max_num_steps ]
-sprintf("Max number of steps interval of the day: %02d:%02d", floor( max_num_steps_int/100 ), max_num_steps_int %% 100)
-
+# Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+maxNumSteps <- which( meanStepsPerInt==max( meanStepsPerInt ) )
+maxNumStepsPerInt <- data$interval[ maxNumSteps ]
+```
+```{r, echo=FALSE}
+sprintf( "Max number of steps interval of the day: %02d:%02d", floor( maxNumStepsPerInt/100 ), maxNumStepsPerInt %% 100 )
 ```
 
-
 ## Imputing missing values
+#### Note that there are a number of days/intervals where there are missing values (coded as NA). The presence of missing days may introduce bias into some calculations or summaries of the data.
+##### 1. Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs).
+##### 2. Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.
+##### 3. Create a new dataset that is equal to the original dataset but with the missing data filled in.
+##### 4. Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
+```{r}
+# Calculate the total number of missing values in the dataset (i.e. the total number of rows with NAs).
+## subset with rows that have NAs
+dataRowsNa <- data[ !complete.cases( data), ]
+## number of rows with NAs
+numDataRowsNas <- nrow( dataRowsNa )
+```
+```{r, echo=FALSE}
+sprintf( "The number of rows with NAs: %d", numDataRowsNas )
+```
 
+##### For the missing interval step data (NAs), we will replace with the mean number of steps for the interval as it was calculated above.
+```{r}
+# Fill in the missing interval step data with the interval mean value calculate above
+for ( i in 1:nrow( data )){
+  if ( is.na( data$steps[i] )){
+    intervalVal <- data$interval[i]
+    rowId <- which( meanStepsPerIntDf$interval == intervalVal )
+    stepsVal <- meanStepsPerIntDf$meanStepsPerInt[rowId]
+    data$steps[i] <- stepsVal
+  }
+}
 
+# sum the number of steps per day with the mean modified data frame
+totalStepsByDayMeanMod <- as.data.frame( tapply( data$steps, data$date, sum, na.rm=TRUE ))
+colnames( totalStepsByDayMeanMod ) <- "steps"
+
+# calculate the mean and median total number of steps taken per day with the mean modified data
+meanStepsMeanMod <- mean( totalStepsByDayMeanMod$steps )
+medianStepsMeanMod <- median( totalStepsByDayMeanMod$steps )
+
+## plot a histogram of the number of steps
+library("ggplot2")
+g <- ggplot( totalStepsByDayMeanMod, aes( x=steps ))
+g <- g + geom_histogram( bin=2500 )
+g <- g + labs( title="Total Number of Steps per Day", y="Frequency", 
+               x="Total Steps in a Day" )
+vLines <- data.frame( stat_type=c("Mean", "Median"), vals=c( meanStepsMeanMod, medianStepsMeanMod ))
+g <- g + geom_vline( data = vLines, aes( xintercept=vals, colour = stat_type ), 
+                     show_guide = TRUE )
+print( g )
+```
+
+```{r, echo=FALSE}
+sprintf( "The mean number of steps with the unmodified data is: %.02f.", meanSteps )
+sprintf( "The median number of steps with the unmodified data is: %d.", medianSteps )
+# report the mean and median total number of steps taken per day with the mean modified data
+sprintf( "The mean number of steps with the mean modfied data: %.02f.", meanStepsMeanMod )
+sprintf( "The median number of steps with the mean modified data: %.0f.", medianStepsMeanMod )
+```
 
 ## Are there differences in activity patterns between weekdays and weekends?
