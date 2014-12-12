@@ -35,9 +35,9 @@ g <- ggplot( totalStepsByDay, aes( x=steps ))
 g <- g + geom_histogram( bin=2500 )
 g <- g + labs( title="Total Number of Steps per Day", y="Frequency", 
                x="Total Steps in a Day" )
-vLines <- data.frame( stat_type=c("Mean", "Median"), vals=c( meanSteps, medianSteps ))
-g <- g + geom_vline( data = vLines, aes( xintercept=vals, colour = stat_type ), 
-                     show_guide = TRUE )
+vLines <- data.frame( statType=c("Mean", "Median"), vals=c( meanSteps, medianSteps ))
+g <- g + geom_vline( data = vLines, aes( xintercept=vals, colour=statType ), show_guide = TRUE )
+g <- g + theme_linedraw( base_size = 12, base_family = "" )
 print( g )
 ```
 
@@ -56,9 +56,12 @@ meanStepsPerInt <- tapply( data$steps, data$interval, mean, na.rm=TRUE )
 interval <- as.numeric( names( meanStepsPerInt ) )
 
 meanStepsPerIntDf <- data.frame( interval, meanStepsPerInt )
-g <- ggplot( meanStepsPerIntDf, aes( x=interval, y=meanStepsPerInt ))
+##g <- ggplot( meanStepsPerIntDf, aes( x=interval, y=meanStepsPerInt ))
+g <- ggplot( meanStepsPerIntDf, aes( interval/100, meanStepsPerInt ))
 g <- g + geom_line()
-g <- g + labs( title="Average Number of Steps During the Day", y="Average Number of Steps", x="hour" )
+g <- g + labs( title="Daily Interval Steps", x="Time of Day (hour)", y="Avg Number of Steps within a 5 min Interval" ) 
+g <- g + scale_x_continuous( breaks=0:6*4, labels=paste(0:6*4,":00", sep="" ))
+g <- g + theme_linedraw( base_size = 12, base_family = "" )
 print( g )
 
 # Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
@@ -110,11 +113,11 @@ medianStepsMeanMod <- median( totalStepsByDayMeanMod$steps )
 library("ggplot2")
 g <- ggplot( totalStepsByDayMeanMod, aes( x=steps ))
 g <- g + geom_histogram( bin=2500 )
-g <- g + labs( title="Total Number of Steps per Day", y="Frequency", 
-               x="Total Steps in a Day" )
-vLines <- data.frame( stat_type=c("Mean", "Median"), vals=c( meanStepsMeanMod, medianStepsMeanMod ))
-g <- g + geom_vline( data = vLines, aes( xintercept=vals, colour = stat_type ), 
-                     show_guide = TRUE )
+g <- g + labs( title="Total Number of Steps per Day" )
+g <- g + labs( y="Frequency", x="Total Steps in a Day" )
+vLines <- data.frame( statType=c("Mean", "Median"), vals=c( meanStepsMeanMod, medianStepsMeanMod ))
+g <- g + theme_linedraw( base_size = 12, base_family = "" )
+g <- g + geom_vline( data = vLines, aes( xintercept=vals, colour=statType ), show_guide=TRUE )
 print( g )
 ```
 
@@ -127,3 +130,25 @@ sprintf( "The median number of steps with the mean modified data: %.0f.", median
 ```
 
 ## Are there differences in activity patterns between weekdays and weekends?
+#### For this part the weekdays() function may be of some help here. Use the dataset with the filled-in missing values for this part.
+##### 1. Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
+##### 2. Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). See the README file in the GitHub repository to see an example of what this plot should look like using simulated data.
+
+```{r}
+# Add a new variable that indicates if the date is on the weekend or a weekday.
+dayType <-factor( weekdays(strptime( data$date, "%Y-%m-%d" )) %in% c("Saturday","Sunday"), labels=c("Weekday","Weekend"), ordered=FALSE )
+data$dayType <- dayType 
+
+# Aggreagate the data by interval and day type.
+meanIntStepsByDayType = aggregate( data$steps, by=list(interval=data$interval, dayType=data$dayType), mean )
+
+# plot the results
+library( ggplot2 )
+g <- ggplot( meanIntStepsByDayType, aes( interval/100, x ))
+g <- g + geom_line() + facet_grid( dayType ~ . )
+g <- g + labs( title="Daily Interval Steps Weekday vs. Weekend" )
+g <- g + labs( x="Time of Day (hour)", y="Avg Number of Steps within a 5 min Interval" ) 
+g <- g + theme_linedraw( base_size = 12, base_family = "" )
+g <- g + scale_x_continuous( breaks=0:6*4, labels=paste(0:6*4,":00", sep="" ))
+print(g)
+```
