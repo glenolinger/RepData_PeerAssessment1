@@ -1,4 +1,10 @@
-# Reproducible Research: Peer Assessment 1
+---
+title: 'Reproducible Research: Peer Assessment 1'
+output:
+  html_document:
+    keep_md: yes
+  pdf_document: default
+---
 
 ## Loading and preprocessing the data
 #### Show any code that is needed to:
@@ -37,7 +43,7 @@ g <- g + theme_linedraw( base_size = 12, base_family = "" )
 print( g )
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-2-1.png) 
+![plot of chunk unnamed-chunk-2](figure/unnamed-chunk-2-1.png) 
 
 
 ```
@@ -67,7 +73,7 @@ g <- g + theme_linedraw( base_size = 12, base_family = "" )
 print( g )
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-4-1.png) 
+![plot of chunk unnamed-chunk-4](figure/unnamed-chunk-4-1.png) 
 
 ```r
 # Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
@@ -131,7 +137,7 @@ g <- g + geom_vline( data = vLines, aes( xintercept=vals, colour=statType ), sho
 print( g )
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-8-1.png) 
+![plot of chunk unnamed-chunk-8](figure/unnamed-chunk-8-1.png) 
 
 
 ```
@@ -175,4 +181,4 @@ g <- g + scale_x_continuous( breaks=0:6*4, labels=paste(0:6*4,":00", sep="" ))
 print(g)
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-10-1.png) 
+![plot of chunk unnamed-chunk-10](figure/unnamed-chunk-10-1.png) 
